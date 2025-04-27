@@ -1,0 +1,34 @@
+[
+  {
+    "id": "deepseek",
+    "icon": "smart_toy_outlined",
+    "translations": {
+      "zh": {
+        "name": "DeepSeek",
+        "description": "专注于深度思考和复杂推理的满血模型"
+      },
+      "en": {
+        "name": "DeepSeek",
+        "description": "Powerful Chinese large model focused on deep thinking and complex reasoning"
+      },
+      "ja": {
+        "name": "DeepSeek",
+        "description": "深い思考と複雑な推論に特化した強力な中国語大規模モデル"
+      }
+    },
+    "exclusiveRules": {
+      "deepThinking": {
+        "enabled": true,
+        "excludes": [
+          "mcpServices"
+        ]
+      },
+      "mcpServices": {
+        "enabled": true,
+        "excludes": [
+          "deepThinking"
+        ]
+      }
+    }
+  }
+]

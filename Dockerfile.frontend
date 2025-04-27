@@ -1,0 +1,46 @@
+FROM instrumentisto/flutter:latest AS builder
+WORKDIR /app
+
+# 安装依赖并拉取本地包
+COPY * .
+RUN flutter pub get
+
+# 复制整个项目并生成本地化文件，然后构建 Web 产物
+COPY . .
+RUN flutter gen-l10n && flutter build web --wasm
+
+# 第二阶段：使用 Nginx 提供静态服务并做反向代理
+FROM nginx:alpine
+
+# 移除默认配置
+RUN rm /etc/nginx/conf.d/default.conf
+
+# 生成自定义 Nginx 配置，处理前端路由并将 /api 转发给后端服务
+RUN cat << 'EOF' > /etc/nginx/conf.d/default.conf
+server {
+    listen       8080;
+    server_name  _;
+    root   /usr/share/nginx/html;
+    index  index.html index.htm;
+
+    # 前端 SPA 路由支持
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 将 /api 前缀的请求反向代理到后端
+    location /api/ {
+        proxy_pass         http://localhost:8000/;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+
+# 拷贝构建产物到 Nginx 静态目录
+COPY --from=builder /app/build/web /usr/share/nginx/html
+
+EXPOSE 8080
+CMD ["nginx", "-g", "daemon off;"] 

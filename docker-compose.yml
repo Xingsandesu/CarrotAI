@@ -1,0 +1,42 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: carrot-postgres
+    restart: always
+    network_mode: host
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-carrot}
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    container_name: carrot-backend
+    network_mode: host
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/config:/app/config
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: carrot-frontend
+    network_mode: host
+    depends_on:
+      - backend
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata: {} 

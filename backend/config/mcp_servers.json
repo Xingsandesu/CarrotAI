@@ -1,0 +1,6 @@
+{
+  "service_name": {
+    "url": "http://localhost:port/sse",
+    "env": {}
+  }
+}

@@ -1,0 +1,32 @@
+[project]
+name = "carrot-backend"
+version = "1.0.0"
+description = "carrot-backend"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.11.16",
+    "alembic>=1.15.2",
+    "asyncpg>=0.30.0",
+    "bcrypt>=4.3.0",
+    "email-validator>=2.2.0",
+    "fastapi>=0.115.12",
+    "greenlet>=3.1.1",
+    "gunicorn>=23.0.0",
+    "langchain-mcp-adapters>=0.0.7",
+    "loguru>=0.7.3",
+    "mcp>=1.6.0",
+    "openai>=1.73.0",
+    "psycopg2-binary>=2.9.10",
+    "pydantic-settings>=2.8.1",
+    "python-jose>=3.4.0",
+    "python-multipart>=0.0.20",
+    "sqlalchemy>=2.0.40",
+    "uvicorn>=0.34.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.2",
+    "vulture>=2.14",
+]
