@@ -302,6 +302,9 @@ http://127.0.0.1:8000/docs
   <img src="images/home.png" width="280"/>
   <img src="images/shop.png" width="280"/>
   <img src="images/env.png" width="280"/>
+  <img src="images/chat.png" width="280"/>
+  <img src="images/myapps.png" width="280"/>
+  <img src="images/settings.png" width="280"/>
 </div>
 
 ## 🤝 贡献

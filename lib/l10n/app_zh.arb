@@ -549,5 +549,10 @@
   "openSourceLicenses": "开源组件许可",
   "license": "许可证",
   "visitWebsite": "访问网站",
-  "usageGuideLabel": "使用方法:"
+  "usageGuideLabel": "使用方法:",
+  "shareSuccess": "分享成功",
+  "shareFailed": "分享失敗",
+  "thinking": "思考中...",
+  "mcpConfiguration": "MCP 配置",
+  "mcpGlobalEnable": "全局启用MCP"
 }

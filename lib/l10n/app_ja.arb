@@ -549,5 +549,10 @@
   "openSourceLicenses": "オープンソースライセンス",
   "license": "ライセンス",
   "visitWebsite": "ウェブサイトを訪問",
-  "usageGuideLabel": "使い方:"
+  "usageGuideLabel": "使い方:",
+  "shareSuccess": "共有成功",
+  "shareFailed": "共有失敗",
+  "thinking": "考え中...",
+  "mcpConfiguration": "MCP設定",
+  "mcpGlobalEnable": "MCPをグローバルに有効にする"
 }

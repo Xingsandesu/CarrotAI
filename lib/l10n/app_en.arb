@@ -552,5 +552,10 @@
   "openSourceLicenses": "Open Source Licenses",
   "license": "License",
   "visitWebsite": "Visit Website",
-  "usageGuideLabel": "Usage Guide:"
+  "usageGuideLabel": "Usage Guide:",
+  "shareSuccess": "Share successful",
+  "shareFailed": "Share failed",
+  "thinking": "Thinking...",
+  "mcpConfiguration": "MCP Configuration",
+  "mcpGlobalEnable": "Enable MCP Globally"
 }

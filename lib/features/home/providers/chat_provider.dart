@@ -263,11 +263,10 @@ class ChatProvider with ChangeNotifier {
       );
     }
 
-    // 4. 添加"思考中..."助手消息占位符
-    // 注意：这里我们使用具体的文本"思考中..."，而不是空字符串
-    final assistantPlaceholder = ChatMessage.assistant('思考中...');
+    // 4. 添加助手消息占位符
+    final assistantPlaceholder = ChatMessage.assistant(_getThinkingString());
     _activeConversation!.addMessage(assistantPlaceholder);
-    notifyListeners(); // 显示"思考中..."气泡
+    notifyListeners(); // 显示占位符气泡
 
     // 5. 发送请求并处理 SSE 流
     try {
@@ -462,7 +461,9 @@ class ChatProvider with ChangeNotifier {
     // 处理内容（即使内容为空，也可能有工具调用需要处理）
     final lastMessage = _activeConversation!.messages.last;
 
-    if (lastMessage.content == '思考中...') {
+    // 检查占位符是否是本地化的"思考中..."
+    final thinkingString = _getThinkingString();
+    if (lastMessage.content == thinkingString) {
       // 第一次接收内容，替换占位符
       _activeConversation!.messages[_activeConversation!.messages.length -
           1] = ChatMessage.assistant(
@@ -528,6 +529,19 @@ class ChatProvider with ChangeNotifier {
       }
     }
     return title;
+  }
+
+  /// 获取本地化的 "思考中..." 字符串
+  String _getThinkingString() {
+    String thinking = '思考中...'; // 默认回退值
+    final context = globalService.currentContext;
+    if (context != null) {
+      final appLocalizations = AppLocalizations.of(context);
+      if (appLocalizations != null) {
+        thinking = appLocalizations.thinking;
+      }
+    }
+    return thinking;
   }
 
   /// 更新最后一条助手消息的内容
@@ -725,7 +739,7 @@ class ChatProvider with ChangeNotifier {
     }
 
     // 添加"思考中..."助手消息占位符
-    final assistantPlaceholder = ChatMessage.assistant('思考中...');
+    final assistantPlaceholder = ChatMessage.assistant(_getThinkingString());
     _activeConversation!.addMessage(assistantPlaceholder);
     notifyListeners(); // 显示"思考中..."气泡
 
