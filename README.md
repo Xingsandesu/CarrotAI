@@ -79,7 +79,7 @@ docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d postgr
 # Backend setup
 uv run backend/scripts/startup.py --user --email <email> --username <name> --password <password>
 
-# 停止 PostgreSQL
+# Stop PostgreSQL
 docker-compose -f docker-compose.yml -f docker-compose.override.yml down
 
 # Deal with Config
