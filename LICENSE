@@ -8,7 +8,7 @@ a. Multi-tenant service: Unless explicitly authorized by CarrotAI in writing, yo
     - Tenant Definition: Within the context of CarrotAI, one tenant corresponds to one workspace. The workspace provides a separated area for each tenant's data and configurations.
 
 b. LOGO and copyright information: In the process of using CarrotAI's frontend, you may not remove or moCarrotAI the LOGO or copyright information in the CarrotAI console or applications. This restriction is inapplicable to uses of CarrotAI that do not involve its frontend.
-    - Frontend Definition: For the purposes of this license, the "frontend" of CarrotAI includes all components located in the `web/` directory when running CarrotAI from the raw source code, or the "web" image when running CarrotAI with Docker.
+    - Frontend Definition: For the purposes of this license, the "frontend" of CarrotAI includes all components located in the `web/` and `lib` directory when running CarrotAI from the raw source code, or the "web" image when running CarrotAI with Docker.
 
 2. As a contributor, you should agree that:
 
