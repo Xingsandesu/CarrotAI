@@ -998,7 +998,8 @@ class _ChatInputState extends State<ChatInput>
                             color: Colors.transparent,
                             child: IconButton(
                               icon: const Icon(Icons.alternate_email),
-                              tooltip: '应用@',
+                              tooltip:
+                                  AppLocalizations.of(context)!.quickActions,
                               onPressed: _toggleMentionList,
                               color: colorScheme.onSurfaceVariant,
                             ),

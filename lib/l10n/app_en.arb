@@ -557,5 +557,6 @@
   "shareFailed": "Share failed",
   "thinking": "Thinking...",
   "mcpConfiguration": "MCP Configuration",
-  "mcpGlobalEnable": "Enable MCP Globally"
+  "mcpGlobalEnable": "Enable MCP Globally",
+  "quickActions": "Quick Actions"
 }

@@ -554,5 +554,6 @@
   "shareFailed": "共有失敗",
   "thinking": "考え中...",
   "mcpConfiguration": "MCP設定",
-  "mcpGlobalEnable": "MCPをグローバルに有効にする"
+  "mcpGlobalEnable": "MCPをグローバルに有効にする",
+  "quickActions": "Quick Actions"
 }

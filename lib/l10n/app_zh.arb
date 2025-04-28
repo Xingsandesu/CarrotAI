@@ -554,5 +554,6 @@
   "shareFailed": "分享失敗",
   "thinking": "思考中...",
   "mcpConfiguration": "MCP 配置",
-  "mcpGlobalEnable": "全局启用MCP"
+  "mcpGlobalEnable": "全局启用MCP",
+  "quickActions": "快捷操作"
 }
