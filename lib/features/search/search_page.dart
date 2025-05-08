@@ -8,6 +8,8 @@ import 'package:carrot/core/api/__export.dart'; // 导入API
 import 'package:carrot/shared/models/__export.dart'; // 导入模型
 import 'package:provider/provider.dart'; // 导入Provider
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:carrot/features/app_market/env_editor_dialog.dart';
+import 'package:carrot/shared/components/toast_notification.dart';
 
 /// 搜索页面
 class SearchPage extends StatefulWidget {
@@ -281,6 +283,53 @@ class _SearchPageState extends State<SearchPage>
     // 可以在这里添加上拉加载更多的逻辑
   }
 
+  // 安装或卸载应用
+  Future<void> _toggleAppInstallation(AppModel app) async {
+    try {
+      final appStorage = await storageFactory.getAppStorage();
+      bool success;
+      if (app.isInstalled) {
+        // 卸载应用
+        success = await appStorage.uninstallApp(app.id);
+      } else {
+        // 安装应用，弹出环境变量编辑对话框
+        if (!mounted) return;
+        final updatedApp = await showEnvEditorDialog(
+          context: context,
+          app: app,
+          isInstalling: true,
+        );
+        if (updatedApp == null || !mounted) {
+          return;
+        }
+        success = await appStorage.installApp(updatedApp);
+      }
+      if (success && mounted) {
+        setState(() {
+          final index = _apps.indexWhere((a) => a.id == app.id);
+          if (index >= 0) {
+            _apps[index] = _apps[index].copyWith(isInstalled: !app.isInstalled);
+          }
+        });
+        ToastNotification.showSuccess(
+          message: app.isInstalled
+              ? '${AppLocalizations.of(context)!.uninstalled}: ${app.name}'
+              : '${AppLocalizations.of(context)!.installed}: ${app.name}',
+          context: context,
+          duration: const Duration(seconds: 2),
+        );
+        _updateSearchResults();
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastNotification.showError(
+          message: '${AppLocalizations.of(context)!.operationFailed}: $e',
+          context: context,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -489,9 +538,15 @@ class _SearchPageState extends State<SearchPage>
       name: app.name,
       type: AppLocalizations.of(context)!.apps,
       description: app.description,
+      isInstalled: app.isInstalled,
+      actionLabel: app.isInstalled
+          ? AppLocalizations.of(context)!.uninstall
+          : AppLocalizations.of(context)!.install,
       onTap: () {
-        // 处理应用点击事件
-        // 可以跳转到应用详情或启动应用
+        _toggleAppInstallation(app);
+      },
+      onActionTap: () {
+        _toggleAppInstallation(app);
       },
     );
   }
