@@ -14,7 +14,7 @@
 
 ## 🥕 介绍
 
-CarrotAI 是一个前沿的 AI Agent应用，通过服务器发送事件（SSE）和内置模型控制协议（MCP）集成，实现实时流式聊天。它支持同时连接多个 SSE MCP 服务器，并提供英文、中文和日文的用户界面。
+CarrotAI 是一个前沿的 AI Agent应用，通过服务器发送事件（SSE）和Streamable-Http调用MCP Server，实现实时流式聊天。它支持同时连接多个 MCP 服务器同时连接 ，并提供英文、中文和日文的用户界面。
 
 ## 🚀 功能
 
@@ -215,6 +215,7 @@ backend/config/
     "url": "http://localhost:10000/duckduckgo-search",
     "env": {}
   },
+  "transportType": "sse",
   "translations": {
     "en": { "name": "DuckDuckGo Search", "type": "Search Tool", "description": "Use DuckDuckGo search engine for secure and private web searches" },
     "zh": { "name": "DuckDuckGo搜索", "type": "搜索工具", "description": "使用 DuckDuckGo 搜索引擎进行安全、私密的网络搜索" },

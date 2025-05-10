@@ -17,7 +17,7 @@
 
 ## 🥕 Introduction
 
-CarrotAI is a cutting-edge AI agent application that delivers real-time streaming chat via Server-Sent Events (SSE) with built-in Model Control Protocol (MCP) integration. It supports concurrent connections to multiple SSE MCP servers and provides user interfaces in English, Chinese, and Japanese.
+CarrotAI is a cutting-edge AI agent application that delivers real-time streaming chat via Server-Sent Events (SSE) and streamable HTTP with built-in Model Control Protocol (MCP) integration. It supports concurrent connections to multiple SSE MCP servers and provides user interfaces in English, Chinese, and Japanese.
 
 ## 🚀 Features
 
@@ -219,6 +219,7 @@ Example (`duckduckgo-search.json`):
     "url": "http://localhost:10000/duckduckgo-search",
     "env": {}
   },
+  "transportType": "sse",
   "translations": {
     "en": { "name": "DuckDuckGo Search", "type": "Search Tool", "description": "Use DuckDuckGo search engine for secure and private web searches" },
     "zh": { "name": "DuckDuckGo搜索", "type": "搜索工具", "description": "使用DuckDuckGo搜索引擎进行安全、私密的网络搜索" },
@@ -274,6 +275,7 @@ http://127.0.0.1:8000/docs
 - [x] SSE multi-server support
 - [x] Multi-language (EN, 中文, 日本語)
 - [x] Docker Compose setup
+- [x] streamable HTTP support
 - [ ] Local Stdio multi-server support
 - [ ] Local OCR support
 - [ ] Support for more formats of the upload interface

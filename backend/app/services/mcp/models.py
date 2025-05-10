@@ -2,7 +2,7 @@
 MCP工具调用的请求和响应数据模型
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 
 class MCPToolRequest:
@@ -25,8 +25,17 @@ class MCPToolResponse:
     """MCP工具调用响应"""
 
     def __init__(
-        self, result: str = None, error: str = None, tools: Dict[str, Any] = None
+        self, 
+        result: Optional[str] = None, 
+        error: Optional[str] = None, 
+        tools: Optional[Dict[str, Any]] = None
     ):
         self.result = result
         self.error = error
         self.tools = tools  # 工具列表
+
+
+class MCPTransportType:
+    """MCP传输类型常量"""
+    SSE = "sse"
+    STREAMABLE_HTTP = "streamable-http" 

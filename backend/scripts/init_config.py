@@ -55,6 +55,7 @@ DEFAULT_APP_CONFIG = {
     "id": "duckduckgo-search",
     "icon": "🔍",
     "mcpServer": {"url": "http://localhost:10000/duckduckgo-search", "env": {}},
+    "transportType": "sse",
     "translations": {
         "zh": {
             "name": "DuckDuckGo搜索",

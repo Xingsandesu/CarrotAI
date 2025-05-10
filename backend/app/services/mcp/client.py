@@ -1,20 +1,18 @@
 """
 MCP客户端服务模块，提供与MCP服务器的连接和工具调用功能
+支持SSE和Streamable HTTP传输
 """
 
 import json
 import logging
 import asyncio
 import time
-import os
-import signal
-import traceback
 import queue
 from typing import Dict, Any, Optional
 from multiprocessing import Process, Queue, Manager
 
-from .mcp_models import MCPToolRequest, MCPListToolsRequest, MCPToolResponse
-from .mcp_worker import mcp_worker_process
+from .models import MCPToolRequest, MCPListToolsRequest, MCPToolResponse, MCPTransportType
+from .worker import mcp_worker_process
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +20,22 @@ logger = logging.getLogger(__name__)
 class MultiprocessMCPClientService:
     """基于多进程的MCP客户端服务，为每个MCP服务器创建一个专用进程"""
 
-    def __init__(self, url: str, env: Optional[Dict[str, str]] = None):
+    def __init__(
+        self, 
+        url: str, 
+        transport_type: str = MCPTransportType.SSE, 
+        env: Optional[Dict[str, str]] = None
+    ):
         """
         初始化多进程MCP客户端服务
 
         Args:
-            url: SSE服务器URL
+            url: MCP服务器URL
+            transport_type: 传输类型，可以是"sse"或"streamable_http"
             env: 环境变量，如API密钥等
         """
         self.url = url
+        self.transport_type = transport_type
         self.env = env or {}
         self.available_tools = {}
         self.process = None
@@ -66,12 +71,13 @@ class MultiprocessMCPClientService:
                     self.request_queue,
                     self.response_queue,
                     self.shutdown_event,
+                    self.transport_type,
                 ),
             )
             self.process.daemon = True  # 设置为守护进程，主进程退出时自动终止
             self.process.start()
 
-            logger.info(f"已启动MCP工作进程 PID: {self.process.pid} 连接到 {self.url}")
+            logger.info(f"已启动MCP工作进程 PID: {self.process.pid} 连接到 {self.url} 使用 {self.transport_type}")
 
             # 等待工作进程连接成功或返回错误
             # 使用异步方式轮询队列
@@ -248,134 +254,80 @@ class MultiprocessMCPClientService:
                 f"输入参数: {json.dumps(arguments, ensure_ascii=False, indent=2)}"
             )
 
-            # 创建工具调用请求
-            request = MCPToolRequest(tool_name, arguments)
+            # 清理任何现有的响应
+            self._clear_response_queue()
 
-            # 发送请求到工作进程
-            self.request_queue.put(request)
+            # 发送工具调用请求
+            self.request_queue.put(MCPToolRequest(tool_name=tool_name, arguments=arguments))
 
-            # 等待响应
-            start_time = time.time()
-            timeout = 60.0  # 60秒超时
+            # 等待响应，使用较长的超时时间
+            response = await self._wait_for_response(timeout=60.0)
 
-            while time.time() - start_time < timeout:
-                # 检查进程是否还活着
-                if not self.process.is_alive():
-                    raise ValueError("MCP工作进程已终止")
+            # 如果没有获取到响应或有错误
+            if not response:
+                raise Exception("工具调用超时或未收到响应")
 
-                # 检查是否有响应
-                if not self.response_queue.empty():
-                    response = self.response_queue.get()
+            if response.error:
+                raise Exception(f"工具调用出错: {response.error}")
 
-                    # 检查是否有错误
-                    if response.error:
-                        raise ValueError(f"工具调用出错: {response.error}")
+            return response.result or ""
 
-                    # 记录结果
-                    duration = time.time() - start_time
-                    logger.info(f"工具 '{tool_name}' 调用完成，耗时: {duration:.2f}秒")
-                    logger.info(f"工具调用结果: {response.result}")
-
-                    return response.result
-
-                # 短暂等待后继续检查
-                await asyncio.sleep(0.1)
-
-            # 超时处理
-            raise TimeoutError(f"调用工具 '{tool_name}' 超时")
-
+        except ValueError as e:
+            # 重新抛出ValueError
+            raise e
         except Exception as e:
             logger.error(f"调用工具 '{tool_name}' 时出错: {str(e)}")
-            # 记录详细错误信息
-            logger.error(f"错误详情: {traceback.format_exc()}")
-            raise
+            raise Exception(f"调用工具 '{tool_name}' 时出错: {str(e)}")
 
     async def disconnect(self) -> None:
-        """
-        断开与MCP服务器的连接并清理资源
-        """
+        """关闭连接并清理资源"""
         try:
-            logger.debug(f"准备断开与MCP服务器的连接并清理资源: {self.url}")
+            logger.info("正在关闭MCP连接")
 
-            # 发送关闭命令到工作进程
-            if self.request_queue and self.process and self.process.is_alive():
+            # 发送关闭信号
+            if self.request_queue:
                 try:
-                    self.request_queue.put("SHUTDOWN")
-                    logger.debug("已发送关闭命令到工作进程")
-                except Exception as e:
-                    logger.error(f"发送关闭命令时出错: {str(e)}")
+                    self.request_queue.put("SHUTDOWN", block=False)
+                except Exception:  # 修复裸异常
+                    pass
 
             # 设置关闭事件
             if self.shutdown_event:
-                try:
-                    self.shutdown_event.set()
-                    logger.debug("已设置关闭事件")
-                except Exception as e:
-                    logger.error(f"设置关闭事件时出错: {str(e)}")
+                self.shutdown_event.set()
 
-            # 等待进程终止
+            # 等待进程自行终止
             if self.process and self.process.is_alive():
-                try:
-                    # 给进程一些时间来清理资源
-                    logger.debug("等待工作进程终止...")
-                    self.process.join(timeout=3.0)
+                logger.info(f"等待MCP工作进程 {self.process.pid} 终止")
+                self.process.join(timeout=2.0)
 
-                    # 如果进程仍在运行，强制终止
-                    if self.process.is_alive():
-                        logger.warning("工作进程未能正常终止，强制终止")
-                        self.process.terminate()
-                        self.process.join(timeout=1.0)
+                # 如果进程仍在运行，强制终止
+                if self.process.is_alive():
+                    logger.warning(f"强制终止MCP工作进程 {self.process.pid}")
+                    self.process.terminate()
+                    self.process.join(timeout=1.0)
 
-                        # 如果仍然无法终止，使用更强力的方法
-                        if self.process.is_alive():
-                            logger.warning("工作进程仍在运行，使用SIGKILL信号")
-                            try:
-                                os.kill(self.process.pid, signal.SIGKILL)
-                            except Exception as e:
-                                logger.error(f"发送SIGKILL信号时出错: {str(e)}")
-                except Exception as e:
-                    logger.error(f"等待进程终止时出错: {str(e)}")
-
-            # 清理队列
-            if self.request_queue:
-                try:
-                    # 清空请求队列
-                    while not self.request_queue.empty():
-                        try:
-                            self.request_queue.get_nowait()
-                        except queue.Empty:
-                            pass
-                except Exception as e:
-                    logger.error(f"清理请求队列时出错: {str(e)}")
-
-            if self.response_queue:
-                try:
-                    # 清空响应队列
-                    while not self.response_queue.empty():
-                        try:
-                            self.response_queue.get_nowait()
-                        except queue.Empty:
-                            pass
-                except Exception as e:
-                    logger.error(f"清理响应队列时出错: {str(e)}")
-
-            # 关闭Manager
-            if self.manager:
-                try:
-                    self.manager.shutdown()
-                    logger.debug("已关闭Manager")
-                except Exception as e:
-                    logger.error(f"关闭Manager时出错: {str(e)}")
-
-            # 清空引用
-            self.process = None
+            # 清理队列和共享对象
             self.request_queue = None
             self.response_queue = None
             self.shutdown_event = None
-            self.manager = None
+            self.process = None
+
+            # 关闭manager
+            if self.manager:
+                self.manager.shutdown()
+                self.manager = None
+
+            # 清空工具列表
             self.available_tools = {}
 
-            logger.info("已断开与MCP服务器的连接并清理资源")
+            logger.info("MCP连接已关闭")
+
         except Exception as e:
-            logger.error(f"断开MCP服务器连接时出错: {str(e)}")
-            logger.debug(f"错误详情: {type(e).__name__}", exc_info=True)
+            logger.error(f"关闭MCP连接时出错: {str(e)}")
+            # 尝试强制清理，即使出错
+            self.request_queue = None
+            self.response_queue = None
+            self.shutdown_event = None
+            self.process = None
+            self.manager = None
+            self.available_tools = {} 
